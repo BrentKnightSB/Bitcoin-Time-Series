@@ -24,7 +24,6 @@ ts.plot(data=newcrypto)
 
 
 #Creating Dataset with values of weekly closing price averages
-crypto3 <- newcrypto["close"]
 n <- 7
 cryptoFinal <- aggregate(newcrypto, list(rep(1:(nrow(newcrypto)%/%n+1),each=n, len=nrow(newcrypto))),mean)[-1]
 
