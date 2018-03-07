@@ -1,7 +1,9 @@
 library(tidyverse)
 library(ggplot2)
 library(MASS)
-
+library(qpcR)
+#For macs download https://www.xquartz.org/
+library(tseries)
 
 #Reading in data
 data <- read.csv("crypto.csv", header=TRUE)
@@ -40,4 +42,18 @@ pacf(bitcoin.diff)
 par(op)
 
 
+# Calculate AICc for ARMA models with p and q running from 0 to 5 (Trying to find a model through brute force) 
+aiccs <- matrix(NA, nr = 6, nc = 6)
+dimnames(aiccs) = list(p=0:5, q=0:5)
+for(p in 0:5)
+{
+  for(q in 0:5) {
+    aiccs[p+1,q+1] = AICc(arima(bitcoin.diff, order = c(p,0,q), method="ML")) }
+}
 
+aiccs
+(aiccs==min(aiccs))
+
+#Check for stationarity
+adf.test(bitcoin.diff)
+  
