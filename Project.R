@@ -30,11 +30,11 @@ bitcoin2 <- ts(bitcoin, frequency =  7)
 ##Transformations
 
 #BoxCox Transform
-time <- 1:length(bitcoin[,2])
-fit <- lm(bitcoin[,2] ~ time)
-boxcoxtransform <- boxcox(bitcoin[,2] ~ time, plotit = T)
+time <- 1:length(r.bitcoin[,2])
+fit <- lm(r.bitcoin[,2] ~ time)
+boxcoxtransform <- boxcox(r.bitcoin[,2] ~ time, plotit = T)
 lamb <- boxcoxtransform$x[which(boxcoxtransform$y == max(boxcoxtransform$y))]
-bitcoinboxcox <- (1/lamb)*(bitcoin[,2]^lamb-1)
+bitcoinboxcox <- (1/lamb)*(r.bitcoin[,2]^lamb-1)
 ts.plot(bitcoinboxcox)
 
 #Differencing
@@ -48,6 +48,11 @@ acf(bitcoin.diff)
 pacf(bitcoin.diff)
 par(op)
 
+#PLotting ACF/PACF
+op <- par(mfrow=c(2,1)) 
+acf(bitcoinboxcox) 
+pacf(bitcoinboxcox)
+par(op)
 
 # Calculate AICc for ARMA models with p and q running from 0 to 5 (Trying to find a model through brute force) 
 aiccs <- matrix(NA, nr = 6, nc = 6)
@@ -75,6 +80,7 @@ fit_MA1D2 = arima(bitcoinboxcox, order=c(1,2,0), method="ML")
 
 #AR(1) Differences = 1
 fit_AR1 = arima(bitcoinboxcox, order=c(1,1,0), method="ML")
+
 
 
 
@@ -123,3 +129,23 @@ lines(330:339,mypred$pred-1.96*mypred$se,lty=2)
 ##Automated Forecast
 fcast <- forecast(bitcoin[,2], h=10)
 plot(fcast)
+
+
+
+
+############################
+
+##New code used in Office Hours
+
+
+r.bitcoin = bitcoin[2:nrow(bitcoin),2] / bitcoin[1:(nrow(bitcoin)-1),2]-1
+
+r.crypto = crypto[2:nrow(crypto),2] / crypto[1:(nrow(crypto)-1),2]-1
+
+#BoxCox Transform
+time <- 1:length(r.crypto)
+fit <- lm(r.crypto ~ time)
+boxcoxtransform <- boxcox(r.crypto ~ time, plotit = T)
+lamb <- boxcoxtransform$x[which(boxcoxtransform$y == max(boxcoxtransform$y))]
+bitcoinboxcox <- (1/lamb)*(r.crypto^lamb-1)
+ts.plot(bitcoinboxcox)
