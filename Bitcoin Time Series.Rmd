@@ -21,7 +21,7 @@ library(tseries)
 
 ```{r reading in data, echo=FALSE}
 #Reading in data
-data <- read.csv("crypto.csv", header=TRUE)
+data <- read.csv("crypto-markets.csv", header=TRUE)
 ```
 
 
@@ -40,7 +40,7 @@ crypto$date <- as.Date(crypto$date)
 bitcoin <- subset(crypto, date > "2017-03-29")
 
 #Creating the return variable
-r.bitcoin = (bitcoin[2:nrow(bitcoin),2] / bitcoin[1:(nrow(bitcoin)-1),2]-1) + 1
+r.bitcoin = (bitcoin[2:nrow(bitcoin),2] / bitcoin[1:(nrow(bitcoin)-1),2]-1) 
 ```
 
 #Analysis
@@ -48,18 +48,18 @@ r.bitcoin = (bitcoin[2:nrow(bitcoin),2] / bitcoin[1:(nrow(bitcoin)-1),2]-1) + 1
 ##Exploratory Data Analysis
 ```{r explore, echo=FALSE}
 #Plotting time series before transformations
-ts.plot(r.bitcoin)
+ts.plot(r.bitcoin, ylab = "Daily Return Rate")
 ```
 
 ##Data Transformations
 ```{r transformations, echo=FALSE}
 #BoxCox Transform
-time <- 1:length(r.bitcoin)
-fit <- lm(r.bitcoin ~ time)
-boxcoxtransform <- boxcox(r.bitcoin ~ time, plotit = T)
+time <- 1:length(r.bitcoin + 1)
+fit <- lm(r.bitcoin + 1 ~ time)
+boxcoxtransform <- boxcox(r.bitcoin + 1 ~ time, plotit = T)
 lamb <- boxcoxtransform$x[which(boxcoxtransform$y == max(boxcoxtransform$y))]
-bitcoinboxcox <- (1/lamb)*(r.bitcoin^lamb-1)
-ts.plot(bitcoinboxcox)
+bitcoinboxcox <- (1/lamb)*((r.bitcoin + 1)^lamb-1)
+ts.plot(bitcoinboxcox, ylab = "Daily Return Rate(Box-Coxed)")
 ```
 
 ##ACF and PACF Analysis
@@ -76,6 +76,7 @@ par(op)
 ```{r diagnostics, echo=FALSE}
 #MA(1) Model
 fit = arima(bitcoinboxcox, order=c(0,0,0), method="ML")
+fit
 
 #acf
 acf(residuals(fit),main = "Autocorrelation")
@@ -113,6 +114,7 @@ par(op)
 ```{r ar, echo=FALSE}
 #AR(19) Model
 fit.ar = arima(bitcoinboxcox, order=c(19,0,0), method="ML")
+fit.ar
 
 #acf
 acf(residuals(fit.ar),main = "Autocorrelation")
@@ -150,21 +152,21 @@ par(op)
 ```{r forecastWhite, echo=FALSE}
 ##Forecasting on bitcoinboxcox dataset with 100
 mypred = predict(fit, n.ahead=100)
-ts.plot(bitcoinboxcox, xlim=c(0,429)) 
+ts.plot(bitcoinboxcox, ylab = "Daily Return Rate", main = "Forecast on Transformed Data", xlim=c(0,429)) 
 points(x = 329:428, y = mypred$pred)
 lines(329:428,mypred$pred+1.96*mypred$se,lty=2)
 lines(329:428,mypred$pred-1.96*mypred$se,lty=2)
 
 #Forecasting on original
 unboxcoxed<-((bitcoinboxcox*lamb)+1)^(1/lamb)
-fitma1unboxcoxed<-arima(unboxcoxed,order=c(0,0,0),method="ML",xreg=1:length(unboxcoxed))
+fitma1unboxcoxed<-arima(unboxcoxed-1,order=c(0,0,0),method="ML",xreg=1:length(unboxcoxed))
 predtrans1<-predict(fitma1unboxcoxed,n.ahead=100,newxreg=(length(unboxcoxed)+1)
                     :(length(unboxcoxed)+100))
 ltrans1<-predtrans1$pred-1.96*predtrans1$se
 
 utrans1<-predtrans1$pred+1.96*predtrans1$se
 
-ts.plot(r.bitcoin)
+ts.plot(r.bitcoin, ylab = "Daily Return Rate", main = "Forecast on Original Data")
 points(x = 329:428,predtrans1$pred,pch=1)
 lines(329:428,ltrans1,col="red",lwd=5)
 lines(329:428,utrans1,col="red",lwd=5)
@@ -173,21 +175,21 @@ lines(329:428,utrans1,col="red",lwd=5)
 ```{r forecastAR, echo=FALSE}
 ##Forecasting AR Model on bitcoinboxcox dataset with 100
 mypred = predict(fit.ar, n.ahead=100)
-ts.plot(bitcoinboxcox, xlim=c(0,429)) 
+ts.plot(bitcoinboxcox, ylab = "Daily Return Rate", main = "Forecast on Transformed Data", xlim=c(0,429)) 
 points(x = 329:428, y = mypred$pred)
 lines(329:428,mypred$pred+1.96*mypred$se,lty=2)
 lines(329:428,mypred$pred-1.96*mypred$se,lty=2)
 
 #Forecasting on original for AR
 unboxcoxed<-((bitcoinboxcox*lamb)+1)^(1/lamb)
-fitma1unboxcoxed<-arima(unboxcoxed,order=c(19,0,0),method="ML",xreg=1:length(unboxcoxed))
+fitma1unboxcoxed<-arima(unboxcoxed-1,order=c(19,0,0),method="ML",xreg=1:length(unboxcoxed))
 predtrans1<-predict(fitma1unboxcoxed,n.ahead=100,newxreg=(length(unboxcoxed)+1)
                     :(length(unboxcoxed)+100))
 ltrans1<-predtrans1$pred-1.96*predtrans1$se
 
 utrans1<-predtrans1$pred+1.96*predtrans1$se
 
-ts.plot(r.bitcoin)
+ts.plot(r.bitcoin, ylab = "Daily Return Rate", main = "Forecast on Original Data")
 points(x = 329:428,predtrans1$pred,pch=1)
 lines(329:428,ltrans1,col="red",lwd=5)
 lines(329:428,utrans1,col="red",lwd=5)
