@@ -94,11 +94,6 @@ We had to choose from the two models, AR(19) and our White Noise model. Usually 
 fit = arima(bitcoinboxcox, order=c(0,0,0), method="ML")
 fit
 
-#acf
-acf(residuals(fit),main = "Autocorrelation")
-#pacf
-pacf(residuals(fit),main = "Partial Autocorrelation")
-
 #Testing for independence of residuals
 Box.test(resid(fit), type="Ljung")
 
@@ -131,11 +126,6 @@ par(op)
 #AR(19) Model
 fit.ar = arima(bitcoinboxcox, order=c(19,0,0), method="ML")
 fit.ar
-
-#acf
-acf(residuals(fit.ar),main = "Autocorrelation")
-#pacf
-pacf(residuals(fit.ar),main = "Partial Autocorrelation")
 
 #Testing for independence of residuals
 Box.test(resid(fit.ar), type="Ljung")
